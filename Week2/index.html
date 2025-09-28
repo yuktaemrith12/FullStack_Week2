@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  
+  <!-- Vue 2 Library -->
+  <script src="https://unpkg.com/vue@2.7.8/dist/vue.js"></script>
+  
+  <!-- Font Awesome (for the cart icon) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  
+  <title>Pet Store</title>
+  
+  <!-- ===== Styling (CSS) ===== -->
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 20px; }
+    header { display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px; }
+    button { padding: 8px 14px; border: 0; border-radius: 6px; cursor: pointer; }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-primary { background: #1f7ae0; color: #fff; }
+    .btn-outline { background: #fff; border: 1px solid #ddd; }
+    figure { display:flex; gap:20px; align-items:flex-start; }
+    figure img { width: 180px; height: auto; border-radius: 8px; border: 1px solid #eee; }
+    .muted { color:#666; font-size: 0.9rem; }
+    .price { font-weight:600; margin: 8px 0; }
+    .row { display:flex; align-items:center; gap:10px; margin-top: 10px; }
+    .pill { background:#f2f4f7; padding: 6px 10px; border-radius: 999px; font-size: 0.85rem; }
+    main { margin-top: 10px; }
+    hr { border: none; height:1px; background:#eee; margin: 18px 0; }
+    ul { padding-left: 18px; }
+    label { display:block; margin: 8px 0 4px; }
+    input { width: 260px; padding: 8px; border: 1px solid #ccc; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <!-- ===== Vue App Root ===== -->
+  <div id="webstore">
+
+    <!-- ===== Header Section ===== -->
+    <header>
+      <!-- Dynamic title message -->
+      <h1>{{ message }}</h1>
+      
+      <!-- Checkout button with cart icon + item count -->
+      <button class="btn-outline" @click="toggleCheckout">
+        <i class="fa-solid fa-cart-shopping"></i>
+        <span style="margin-left:6px;">{{ cartItemCount || 0 }} Checkout</span>
+      </button>
+    </header>
+
+    <!-- ===== PRODUCT PAGE ===== -->
+    <main v-if="showProduct">
+      <figure>
+        <!-- Product Image (bound dynamically from Vue data) -->
+        <img :src="product.image" alt="Cat Image">
+        <figcaption>
+          <!-- Product title -->
+          <h2 v-text="product.title"></h2>
+          <!-- Product description -->
+          <p class="muted" v-text="product.description"></p>
+          <!-- Product price -->
+          <p class="price">Price: Rs {{ product.price }}</p>
+          <!-- Product ID -->
+          <p class="pill">Product ID: {{ product.id }}</p>
+
+          <!-- Add to Cart button + stock info -->
+          <div class="row">
+            <!-- Button disables when no stock available -->
+            <button class="btn-primary"
+                    @click="addToCart"
+                    :disabled="!canAddToCart">
+              Add to cart
+            </button>
+            <!-- Live inventory info -->
+            <span class="muted">
+              In stock: {{ product.availableInventory }} |
+              In cart: {{ cartItemCount }} |
+              Remaining: {{ remainingInventory }}
+            </span>
+          </div>
+        </figcaption>
+      </figure>
+      <hr>
+      <p class="muted">
+        Tip: The “Add to cart” button disables itself when no inventory is left.
+      </p>
+    </main>
+
+    <!-- ===== CHECKOUT PAGE ===== -->
+    <main v-else>
+      <h2>Checkout</h2>
+      <!-- Show total items in cart -->
+      <p>You have <strong>{{ cartItemCount }}</strong> item(s) in your cart.</p>
+
+      <!-- Cart contents (here only one product for demo) -->
+      <ul>
+        <li>{{ product.title }} × {{ cartItemCount }} (Rs {{ product.price }} each)</li>
+      </ul>
+
+      <!-- Subtotal calculation -->
+      <p class="price">Subtotal: Rs {{ subtotal }}</p>
+      <hr>
+
+      <!-- Checkout form -->
+      <form @submit.prevent="placeOrder">
+        <!-- Name field (letters only validation) -->
+        <label for="name">Name (letters only)</label>
+        <input id="name" v-model="order.name" placeholder="e.g., Yukta" />
+
+        <!-- Phone field (numbers only validation) -->
+        <label for="phone">Phone (numbers only)</label>
+        <input id="phone" v-model="order.phone" placeholder="e.g., 57901234" />
+
+        <!-- Buttons row -->
+        <div class="row" style="margin-top:12px;">
+          <!-- Place order button, only enabled when form is valid -->
+          <button class="btn-primary" :disabled="!formValid">Place order</button>
+          <!-- Back to product page -->
+          <button type="button" class="btn-outline" @click="toggleCheckout">Back to products</button>
+        </div>
+      </form>
+      <p class="muted" style="margin-top:8px;">
+        (Simple validation: name = letters, phone = digits.)
+      </p>
+    </main>
+  </div>
+
+  <!-- ===== Vue App Script ===== -->
+  <script>
+    let webstore = new Vue({
+      el: '#webstore',   // Attach Vue to <div id="webstore">
+
+      // ===== Data properties (state) =====
+      data: {
+        message: 'Welcome to my Pet Store!',   // Page header
+        showProduct: true,                     // Controls which view is shown (product/checkout)
+        cart: [],                              // Stores product IDs added to cart
+
+        // Product details (single product for lab demo)
+        product: {
+          id: 1001,
+          title: 'Cat Food, 25lb bag',
+          description: 'A 25 pound bag of irresistible, organic goodness for your cat.',
+          price: 2000,
+          image: 'product-fullsize.png',       // Image path
+          availableInventory: 5                // Initial stock
+        },
+
+        // Customer order form data
+        order: { name: '', phone: '' }
+      },
+
+      // ===== Computed properties (auto-calculated values) =====
+      computed: {
+        // Number of items in cart
+        cartItemCount () {
+          return this.cart.length;
+        },
+        // Whether user can still add more items (based on stock)
+        canAddToCart () {
+          return this.cart.length < this.product.availableInventory;
+        },
+        // Remaining stock (inventory - items in cart)
+        remainingInventory () {
+          return Math.max(this.product.availableInventory - this.cart.length, 0);
+        },
+        // Total cost (subtotal)
+        subtotal () {
+          return this.cartItemCount * this.product.price;
+        },
+        // Simple form validation (name must be letters, phone must be digits, and cart must not be empty)
+        formValid () {
+          const nameOk = /^[A-Za-z\s]+$/.test(this.order.name || '');
+          const phoneOk = /^\d+$/.test(this.order.phone || '');
+          return nameOk && phoneOk && this.cartItemCount > 0;
+        }
+      },
+
+      // ===== Methods (actions triggered by user) =====
+      methods: {
+        // Add product to cart
+        addToCart () {
+          if (this.canAddToCart) {
+            this.cart.push(this.product.id);
+          }
+        },
+        // Toggle between product page and checkout page
+        toggleCheckout () {
+          this.showProduct = !this.showProduct;
+        },
+        // Handle form submission (place order)
+        placeOrder () {
+          if (!this.formValid) return;
+          alert(`Order placed for ${this.order.name} — ${this.cartItemCount} item(s).`);
+          // Reset state for demo
+          this.cart = [];
+          this.order = { name: '', phone: '' };
+          this.showProduct = true;
+        }
+      }
+    });
+  </script>
+</body>
+</html>
