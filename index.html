@@ -7,7 +7,7 @@
   <!-- Vue 2 Library -->
   <script src="https://unpkg.com/vue@2.7.8/dist/vue.js"></script>
   
-  <!-- Font Awesome (for the cart icon) -->
+  <!-- Font Awesome - icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   
   <title>Pet Store</title>
@@ -129,47 +129,38 @@
   <!-- ===== Vue App Script ===== -->
   <script>
     let webstore = new Vue({
-      el: '#webstore',   // Attach Vue to <div id="webstore">
+      el: '#webstore',
 
-      // ===== Data properties (state) =====
       data: {
-        message: 'Welcome to my Pet Store!',   // Page header
-        showProduct: true,                     // Controls which view is shown (product/checkout)
-        cart: [],                              // Stores product IDs added to cart
+        message: 'Welcome to my Pet Store!',
+        showProduct: true,
+        cart: [],
 
-        // Product details (single product for lab demo)
         product: {
           id: 1001,
           title: 'Cat Food, 25lb bag',
           description: 'A 25 pound bag of irresistible, organic goodness for your cat.',
           price: 2000,
-          image: 'product-fullsize.png',       // Image path
-          availableInventory: 5                // Initial stock
+          image: 'image/product-fullsize.png',  // <-- updated path (inside image/ folder)
+          availableInventory: 5
         },
 
-        // Customer order form data
         order: { name: '', phone: '' }
       },
 
-      // ===== Computed properties (auto-calculated values) =====
       computed: {
-        // Number of items in cart
         cartItemCount () {
           return this.cart.length;
         },
-        // Whether user can still add more items (based on stock)
         canAddToCart () {
           return this.cart.length < this.product.availableInventory;
         },
-        // Remaining stock (inventory - items in cart)
         remainingInventory () {
           return Math.max(this.product.availableInventory - this.cart.length, 0);
         },
-        // Total cost (subtotal)
         subtotal () {
           return this.cartItemCount * this.product.price;
         },
-        // Simple form validation (name must be letters, phone must be digits, and cart must not be empty)
         formValid () {
           const nameOk = /^[A-Za-z\s]+$/.test(this.order.name || '');
           const phoneOk = /^\d+$/.test(this.order.phone || '');
@@ -177,23 +168,16 @@
         }
       },
 
-      // ===== Methods (actions triggered by user) =====
       methods: {
-        // Add product to cart
         addToCart () {
-          if (this.canAddToCart) {
-            this.cart.push(this.product.id);
-          }
+          if (this.canAddToCart) this.cart.push(this.product.id);
         },
-        // Toggle between product page and checkout page
         toggleCheckout () {
           this.showProduct = !this.showProduct;
         },
-        // Handle form submission (place order)
         placeOrder () {
           if (!this.formValid) return;
           alert(`Order placed for ${this.order.name} — ${this.cartItemCount} item(s).`);
-          // Reset state for demo
           this.cart = [];
           this.order = { name: '', phone: '' };
           this.showProduct = true;
