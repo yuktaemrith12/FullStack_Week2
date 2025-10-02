@@ -3,179 +3,233 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  
-  <!-- Vue 2 Library -->
+
+  <!-- Vue 2 -->
   <script src="https://unpkg.com/vue@2.7.8/dist/vue.js"></script>
-  
-  <!-- Font Awesome - icons -->
+  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-  
+
   <title>Pet Store</title>
-  
-  <!-- ===== Styling (CSS) ===== -->
+
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 20px; }
-    header { display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px; }
-    button { padding: 8px 14px; border: 0; border-radius: 6px; cursor: pointer; }
-    button:disabled { opacity: .5; cursor: not-allowed; }
-    .btn-primary { background: #1f7ae0; color: #fff; }
-    .btn-outline { background: #fff; border: 1px solid #ddd; }
-    figure { display:flex; gap:20px; align-items:flex-start; }
-    figure img { width: 180px; height: auto; border-radius: 8px; border: 1px solid #eee; }
-    .muted { color:#666; font-size: 0.9rem; }
-    .price { font-weight:600; margin: 8px 0; }
-    .row { display:flex; align-items:center; gap:10px; margin-top: 10px; }
-    .pill { background:#f2f4f7; padding: 6px 10px; border-radius: 999px; font-size: 0.85rem; }
-    main { margin-top: 10px; }
-    hr { border: none; height:1px; background:#eee; margin: 18px 0; }
-    ul { padding-left: 18px; }
-    label { display:block; margin: 8px 0 4px; }
-    input { width: 260px; padding: 8px; border: 1px solid #ccc; border-radius: 6px; }
+    /* ===== Design Tokens ===== */
+    :root{
+      --bg:#f7f8fb;
+      --card:#ffffff;
+      --ink:#1b1f24;
+      --muted:#6b7280;
+      --primary:#861fe0;
+      --primary-600:#9717b4;
+      --ring:#cfe3ff;
+      --border:#e8eaf0;
+      --pill:#f3f6fb;
+      --success:#d70ee9;
+      --radius:14px;
+      --shadow:0 8px 24px rgba(2,6,23,.08);
+    }
+
+    /* ===== Base ===== */
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--ink); background:var(--bg);
+    }
+    .container{max-width:1050px;margin:40px auto;padding:0 20px;}
+    .card{
+      background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+      box-shadow:var(--shadow);
+    }
+
+    /* ===== Header ===== */
+    .header{
+      display:flex; justify-content:space-between; align-items:center; gap:16px;
+      padding:24px 24px; background:linear-gradient(180deg,#ffffff, #f7fbff);
+      border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow);
+    }
+    .brand h1{margin:0; font-size:clamp(28px, 3.6vw, 44px); letter-spacing:.2px;}
+    .brand p{margin:6px 0 0; color:var(--muted)}
+    .cart-btn{
+      display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:999px;
+      border:1px solid var(--border); background:#fff; cursor:pointer;
+      transition:transform .08s ease, box-shadow .2s ease, border-color .2s ease;
+    }
+    .cart-btn:hover{box-shadow:0 6px 18px rgba(2,6,23,.06); border-color:#dfe3ea}
+    .cart-count{
+      background:var(--pill); padding:6px 10px; border-radius:999px; font-weight:600;
+    }
+
+    /* ===== Product block ===== */
+    .product{
+      display:grid; grid-template-columns: 220px 1fr; gap:26px; padding:26px;
+    }
+    .figure{
+      background:#fff; border:1px solid var(--border); border-radius:12px; padding:10px;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .figure img{width:100%; height:auto; display:block; border-radius:10px}
+    .title{margin:0 0 8px; font-size:clamp(22px, 2.6vw, 32px)}
+    .muted{color:var(--muted)}
+    .price{margin:14px 0; font-size:18px; font-weight:700}
+    .pill{
+      display:inline-block; background:var(--pill); padding:8px 12px; border-radius:999px;
+      font-size:.9rem; border:1px solid var(--border);
+    }
+
+    .row{display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin-top:14px}
+    .btn{
+      padding:10px 16px; border:0; border-radius:10px; cursor:pointer; font-weight:600;
+      transition:transform .06s ease, box-shadow .2s ease, background .2s ease;
+    }
+    .btn:disabled{opacity:.5; cursor:not-allowed}
+    .btn-primary{background:var(--primary); color:#fff; box-shadow:0 6px 18px rgba(31,122,224,.25)}
+    .btn-primary:hover{background:var(--primary-600)}
+    .btn-outline{
+      background:#fff; color:var(--ink); border:1px solid var(--border)
+    }
+    .btn:focus{outline:3px solid var(--ring); outline-offset:2px}
+
+    hr{border:0; height:1px; background:var(--border); margin:18px 0}
+
+    /* ===== Checkout ===== */
+    .checkout{padding:26px}
+    .list{padding-left:18px}
+    .subtotal{font-weight:800; font-size:18px}
+
+    .form-grid{display:grid; gap:14px; max-width:520px}
+    label{font-weight:600}
+    input{
+      width:100%; padding:12px 12px; border:1px solid var(--border); border-radius:10px;
+      background:#fff; transition:border-color .15s ease, box-shadow .15s ease;
+    }
+    input:focus{border-color:#bcd3ff; box-shadow:0 0 0 4px rgba(32,118,255,.12); outline:0}
+
+    /* ===== Footer hint ===== */
+    .hint{
+      display:flex; align-items:center; gap:10px; color:var(--muted); font-size:.95rem; padding:0 26px 26px;
+    }
+    .hint i{color:var(--success)}
+
+    /* ===== Responsive ===== */
+    @media (max-width: 720px){
+      .product{grid-template-columns:1fr}
+    }
   </style>
 </head>
 <body>
-  <!-- ===== Vue App Root ===== -->
-  <div id="webstore">
+  <div id="webstore" class="container">
 
-    <!-- ===== Header Section ===== -->
-    <header>
-      <!-- Dynamic title message -->
-      <h1>{{ message }}</h1>
-      
-      <!-- Checkout button with cart icon + item count -->
-      <button class="btn-outline" @click="toggleCheckout">
+    <!-- Header -->
+    <div class="header">
+      <div class="brand">
+        <h1>{{ message }}</h1>
+        <p class="muted">One-stop shop for happy pets 🐾</p>
+      </div>
+
+      <button class="cart-btn" @click="toggleCheckout" aria-label="Open checkout">
         <i class="fa-solid fa-cart-shopping"></i>
-        <span style="margin-left:6px;">{{ cartItemCount || 0 }} Checkout</span>
+        <span class="cart-count">{{ cartItemCount || 0 }}</span>
+        <span class="muted">Checkout</span>
       </button>
-    </header>
+    </div>
 
-    <!-- ===== PRODUCT PAGE ===== -->
-    <main v-if="showProduct">
-      <figure>
-        <!-- Product Image (bound dynamically from Vue data) -->
-        <img :src="product.image" alt="Cat Image">
-        <figcaption>
-          <!-- Product title -->
-          <h2 v-text="product.title"></h2>
-          <!-- Product description -->
-          <p class="muted" v-text="product.description"></p>
-          <!-- Product price -->
-          <p class="price">Price: Rs {{ product.price }}</p>
-          <!-- Product ID -->
-          <p class="pill">Product ID: {{ product.id }}</p>
+    <!-- Product Card -->
+    <div v-if="showProduct" class="card product" role="region" aria-label="Product">
+      <div class="figure">
+        <img :src="product.image" :alt="product.title">
+      </div>
 
-          <!-- Add to Cart button + stock info -->
-          <div class="row">
-            <!-- Button disables when no stock available -->
-            <button class="btn-primary"
-                    @click="addToCart"
-                    :disabled="!canAddToCart">
-              Add to cart
-            </button>
-            <!-- Live inventory info -->
-            <span class="muted">
-              In stock: {{ product.availableInventory }} |
-              In cart: {{ cartItemCount }} |
-              Remaining: {{ remainingInventory }}
-            </span>
-          </div>
-        </figcaption>
-      </figure>
-      <hr>
-      <p class="muted">
-        Tip: The “Add to cart” button disables itself when no inventory is left.
-      </p>
-    </main>
+      <section>
+        <h2 class="title">{{ product.title }}</h2>
+        <p class="muted">{{ product.description }}</p>
 
-    <!-- ===== CHECKOUT PAGE ===== -->
-    <main v-else>
-      <h2>Checkout</h2>
-      <!-- Show total items in cart -->
+        <p class="price">Price: Rs {{ product.price }}</p>
+        <span class="pill">Product ID: {{ product.id }}</span>
+
+        <div class="row">
+          <button class="btn btn-primary" @click="addToCart" :disabled="!canAddToCart">
+            <i class="fa-solid fa-plus"></i> Add to cart
+          </button>
+          <span class="muted">
+            In stock: {{ product.availableInventory }} ·
+            In cart: {{ cartItemCount }} ·
+            Remaining: {{ remainingInventory }}
+          </span>
+        </div>
+      </section>
+    </div>
+
+
+
+    <!-- Checkout Card -->
+    <div v-else class="card checkout" role="region" aria-label="Checkout">
+      <h2 class="title" style="margin-bottom:8px">Checkout</h2>
       <p>You have <strong>{{ cartItemCount }}</strong> item(s) in your cart.</p>
 
-      <!-- Cart contents (here only one product for demo) -->
-      <ul>
+      <ul class="list">
         <li>{{ product.title }} × {{ cartItemCount }} (Rs {{ product.price }} each)</li>
       </ul>
 
-      <!-- Subtotal calculation -->
-      <p class="price">Subtotal: Rs {{ subtotal }}</p>
+      <p class="subtotal">Subtotal: Rs {{ subtotal }}</p>
       <hr>
 
-      <!-- Checkout form -->
-      <form @submit.prevent="placeOrder">
-        <!-- Name field (letters only validation) -->
-        <label for="name">Name (letters only)</label>
-        <input id="name" v-model="order.name" placeholder="e.g., Yukta" />
+      <form class="form-grid" @submit.prevent="placeOrder">
+        <div>
+          <label for="name">Name (letters only)</label>
+          <input id="name" v-model="order.name" placeholder="e.g., Yukta"/>
+        </div>
 
-        <!-- Phone field (numbers only validation) -->
-        <label for="phone">Phone (numbers only)</label>
-        <input id="phone" v-model="order.phone" placeholder="e.g., 57901234" />
+        <div>
+          <label for="phone">Phone (numbers only)</label>
+          <input id="phone" v-model="order.phone" placeholder="e.g., 57901234"/>
+        </div>
 
-        <!-- Buttons row -->
-        <div class="row" style="margin-top:12px;">
-          <!-- Place order button, only enabled when form is valid -->
-          <button class="btn-primary" :disabled="!formValid">Place order</button>
-          <!-- Back to product page -->
-          <button type="button" class="btn-outline" @click="toggleCheckout">Back to products</button>
+        <div class="row" style="margin-top:6px">
+          <button class="btn btn-primary" :disabled="!formValid">
+            <i class="fa-solid fa-check"></i> Place order
+          </button>
+          <button type="button" class="btn btn-outline" @click="toggleCheckout">
+            Back to products
+          </button>
         </div>
       </form>
-      <p class="muted" style="margin-top:8px;">
-        (Simple validation: name = letters, phone = digits.)
-      </p>
-    </main>
+    </div>
+
   </div>
 
-  <!-- ===== Vue App Script ===== -->
   <script>
     let webstore = new Vue({
       el: '#webstore',
-
       data: {
         message: 'Welcome to my Pet Store!',
         showProduct: true,
         cart: [],
-
         product: {
           id: 1001,
           title: 'Cat Food, 25lb bag',
           description: 'A 25 pound bag of irresistible, organic goodness for your cat.',
           price: 2000,
-          image: 'image/product-fullsize.png',  // <-- updated path (inside image/ folder)
+          image: 'image/product-fullsize.png',
           availableInventory: 5
         },
-
         order: { name: '', phone: '' }
       },
-
+      
       computed: {
-        cartItemCount () {
-          return this.cart.length;
-        },
-        canAddToCart () {
-          return this.cart.length < this.product.availableInventory;
-        },
-        remainingInventory () {
-          return Math.max(this.product.availableInventory - this.cart.length, 0);
-        },
-        subtotal () {
-          return this.cartItemCount * this.product.price;
-        },
-        formValid () {
+        cartItemCount(){ return this.cart.length; },
+        canAddToCart(){ return this.cart.length < this.product.availableInventory; }, 
+        remainingInventory(){ return Math.max(this.product.availableInventory - this.cart.length, 0); },
+        subtotal(){ return this.cartItemCount * this.product.price; },
+        formValid(){
           const nameOk = /^[A-Za-z\s]+$/.test(this.order.name || '');
           const phoneOk = /^\d+$/.test(this.order.phone || '');
           return nameOk && phoneOk && this.cartItemCount > 0;
         }
       },
-
       methods: {
-        addToCart () {
-          if (this.canAddToCart) this.cart.push(this.product.id);
-        },
-        toggleCheckout () {
-          this.showProduct = !this.showProduct;
-        },
-        placeOrder () {
+        addToCart(){ if (this.canAddToCart) this.cart.push(this.product.id); },
+        toggleCheckout(){ this.showProduct = !this.showProduct; },
+        placeOrder(){
           if (!this.formValid) return;
           alert(`Order placed for ${this.order.name} — ${this.cartItemCount} item(s).`);
           this.cart = [];
