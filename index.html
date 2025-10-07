@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <!-- Vue 2 -->
+  <script src="https://unpkg.com/vue@2.7.14/dist/vue.min.js"></script>
+
+  <!-- Font Awesome (icons) -->
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+  <title>Pet Store</title>
+
+  <!-- Your external stylesheet -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="webstore" class="container">
+
+    <!-- Header -->
+    <header class="header">
+      <div class="brand">
+        <h1>{{ message }}</h1>
+        <p class="muted">One-stop shop for happy pets 🐾</p>
+      </div>
+
+      <button class="cart-btn" @click="toggleCheckout" aria-label="Open checkout">
+        <i class="fa-solid fa-cart-shopping"></i>
+        <span class="cart-count">{{ cartItemCount || 0 }}</span>
+        <span class="muted">Checkout</span>
+      </button>
+    </header>
+
+    <!-- Product Card -->
+    <section v-if="showProduct" class="card product" role="region" aria-label="Product">
+      <div class="figure">
+        <img :src="product.image" :alt="product.title">
+      </div>
+
+      <div class="content">
+        <h2 class="title">{{ product.title }}</h2>
+        <p class="muted">{{ product.description }}</p>
+
+        <p class="price">Price: {{ priceDisplay }}</p>
+        <span class="pill">Product ID: {{ product.id }}</span>
+
+        <!-- Stock banner (conditional) -->
+        <p class="stock" :class="stockClass" aria-live="polite">
+          {{ stockMessage }}
+        </p>
+
+        <div class="row">
+          <button class="btn btn-primary" @click="addToCart" :disabled="!canAddToCart">
+            <i class="fa-solid fa-plus"></i> Add to cart
+          </button>
+          <span class="muted">
+            In stock: {{ product.availableInventory }} ·
+            In cart: {{ cartItemCount }} ·
+            Remaining: {{ itemsLeft }}
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Checkout Card -->
+    <section v-else class="card checkout" role="region" aria-label="Checkout">
+      <h2 class="title" style="margin-bottom:8px">Checkout</h2>
+      <p>You have <strong>{{ cartItemCount }}</strong> item(s) in your cart.</p>
+
+      <ul class="list">
+        <li>{{ product.title }} × {{ cartItemCount }} ({{ priceDisplay }} each)</li>
+      </ul>
+
+      <p class="subtotal">Subtotal: {{ subtotalDisplay }}</p>
+      <hr>
+
+      <form class="form-grid" @submit.prevent="placeOrder" novalidate>
+        <div>
+          <label for="name">Name :</label>
+          <input id="name" v-model="order.name" placeholder="e.g., Yukta"/>
+          <small :class="nameOk ? 'ok' : 'err'">
+            {{ nameOk ? 'Looks good' : 'Letters and spaces only' }}
+          </small>
+        </div>
+
+        <div>
+          <label for="phone">Phone :</label>
+          <input id="phone" v-model="order.phone" placeholder="e.g., 57901234"/>
+          <small :class="phoneOk ? 'ok' : 'err'">
+            {{ phoneOk ? 'Looks good' : 'Digits only' }}
+          </small>
+        </div>
+
+        <div class="row" style="margin-top:6px">
+          <button class="btn btn-primary" :disabled="!formValid">
+            <i class="fa-solid fa-check"></i> Place order
+          </button>
+          <button type="button" class="btn btn-outline" @click="toggleCheckout">
+            Back to products
+          </button>
+        </div>
+      </form>
+    </section>
+
+  </div>
+
+  <!-- Refactored logic -->
+  <script>
+  new Vue({
+    el: '#webstore',
+    data: {
+      message: 'Welcome to my Pet Store!',
+      showProduct: true,
+      cart: [],
+      product: {
+        id: 1001,
+        title: 'Cat Food, 25lb bag',
+        description: 'A 25 pound bag of irresistible, organic goodness for your cat.',
+        price: 2000,
+        image: 'image/product-fullsize.png',
+        availableInventory: 5
+      },
+      order: { name: '', phone: '' }
+    },
+
+    /* ---------- COMPUTED: single source of truth ---------- */
+    computed: {
+      // cart
+      cartItemCount () { return this.cart.length; },
+
+      // inventory math
+      itemsLeft () {
+        const left = this.product.availableInventory - this.cartItemCount;
+        return left < 0 ? 0 : left;
+      },
+
+      canAddToCart () { return this.itemsLeft > 0; },
+
+      // totals
+      subtotal () { return this.cartItemCount * this.product.price; },
+
+      // validation
+      nameOk ()  { return /^[A-Za-z ]+$/.test((this.order.name || '').trim()); },
+      phoneOk () { return /^\d+$/.test((this.order.phone || '').trim()); },
+      formValid () { return this.nameOk && this.phoneOk && this.cartItemCount > 0; },
+
+      // conditional stock banner
+      stockState () {
+        if (this.itemsLeft === 0) return 'out';
+        if (this.itemsLeft < 5)  return 'low';
+        return 'ok';
+      },
+      stockMessage () {
+        if (this.stockState === 'out') return 'All out!';
+        if (this.stockState === 'low') return `Only ${this.itemsLeft} left!`;
+        return 'In stock';
+      },
+      stockClass () {
+        return {
+          'stock--out': this.stockState === 'out',
+          'stock--low': this.stockState === 'low',
+          'stock--ok':  this.stockState === 'ok'
+        };
+      },
+
+      // formatted currency (keeps templates clean)
+      priceDisplay ()    { return this.formatRs(this.product.price); },
+      subtotalDisplay () { return this.formatRs(this.subtotal); }
+    },
+
+    /* ---------- METHODS: actions & utilities ---------- */
+    methods: {
+      addToCart () {
+        if (!this.canAddToCart) return; // defensive guard
+        this.cart.push(this.product.id);
+      },
+      toggleCheckout () { this.showProduct = !this.showProduct; },
+      placeOrder () {
+        if (!this.formValid) return;
+        alert(`Order placed for ${this.order.name.trim()} — ${this.cartItemCount} item(s).`);
+        // reset
+        this.cart = [];
+        this.order = { name: '', phone: '' };
+        this.showProduct = true;
+      },
+      formatRs (amount) {
+        return 'Rs ' + Number(amount).toLocaleString();
+      }
+    }
+  });
+  </script>
+</body>
+</html>
