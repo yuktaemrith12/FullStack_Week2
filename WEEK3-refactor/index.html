@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <!-- Vue 2 -->
+  <script src="https://unpkg.com/vue@2.7.8/dist/vue.js"></script>
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+  <title>Pet Store</title>
+
+  <!-- Your external stylesheet -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="webstore" class="container">
+
+    <!-- Header -->
+    <div class="header">
+      <div class="brand">
+        <h1>{{ message }}</h1>
+        <p class="muted">One-stop shop for happy pets 🐾</p>
+      </div>
+
+      <button class="cart-btn" @click="toggleCheckout" aria-label="Open checkout">
+        <i class="fa-solid fa-cart-shopping"></i>
+        <span class="cart-count">{{ cartItemCount || 0 }}</span>
+        <span class="muted">Checkout</span>
+      </button>
+    </div>
+
+    <!-- Product Card -->
+    <div v-if="showProduct" class="card product" role="region" aria-label="Product">
+      <div class="figure">
+        <img :src="product.image" :alt="product.title">
+      </div>
+
+      <section>
+        <h2 class="title">{{ product.title }}</h2>
+        <p class="muted">{{ product.description }}</p>
+
+        <p class="price">Price: Rs {{ product.price }}</p>
+        <span class="pill">Product ID: {{ product.id }}</span>
+
+        <div class="row">
+          <button class="btn btn-primary" @click="addToCart" :disabled="!canAddToCart">
+            <i class="fa-solid fa-plus"></i> Add to cart
+          </button>
+          <span class="muted">
+            In stock: {{ product.availableInventory }} ·
+            In cart: {{ cartItemCount }} ·
+            Remaining: {{ remainingInventory }}
+          </span>
+        </div>
+      </section>
+    </div>
+
+    <!-- Checkout Card -->
+    <div v-else class="card checkout" role="region" aria-label="Checkout">
+      <h2 class="title" style="margin-bottom:8px">Checkout</h2>
+      <p>You have <strong>{{ cartItemCount }}</strong> item(s) in your cart.</p>
+
+      <ul class="list">
+        <li>{{ product.title }} × {{ cartItemCount }} (Rs {{ product.price }} each)</li>
+      </ul>
+
+      <p class="subtotal">Subtotal: Rs {{ subtotal }}</p>
+      <hr>
+
+      <form class="form-grid" @submit.prevent="placeOrder">
+        <div>
+          <label for="name">Name :</label>
+          <input id="name" v-model="order.name" placeholder="e.g., Yukta"/>
+        </div>
+
+        <div>
+          <label for="phone">Phone :</label>
+          <input id="phone" v-model="order.phone" placeholder="e.g., 57901234"/>
+        </div>
+
+        <div class="row" style="margin-top:6px">
+          <button class="btn btn-primary" :disabled="!formValid">
+            <i class="fa-solid fa-check"></i> Place order
+          </button>
+          <button type="button" class="btn btn-outline" @click="toggleCheckout">
+            Back to products
+          </button>
+        </div>
+      </form>
+    </div>
+
+  </div>
+
+  <script>
+    let webstore = new Vue({
+      el: '#webstore',
+      data: {
+        message: 'Welcome to my Pet Store!',
+        showProduct: true,
+        cart: [],
+        product: {
+          id: 1001,
+          title: 'Cat Food, 25lb bag',
+          description: 'A 25 pound bag of irresistible, organic goodness for your cat.',
+          price: 2000,
+          image: 'image/product-fullsize.png',
+          availableInventory: 5
+        },
+        order: { name: '', phone: '' }
+      },
+      computed: {
+        cartItemCount(){ return this.cart.length; },
+        canAddToCart(){ return this.cart.length < this.product.availableInventory; }, 
+        remainingInventory(){ return Math.max(this.product.availableInventory - this.cart.length, 0); },
+        subtotal(){ return this.cartItemCount * this.product.price; },
+        formValid(){
+          const nameOk = /^[A-Za-z\s]+$/.test(this.order.name || '');
+          const phoneOk = /^\d+$/.test(this.order.phone || '');
+          return nameOk && phoneOk && this.cartItemCount > 0;
+        }
+      },
+      methods: {
+        addToCart(){ if (this.canAddToCart) this.cart.push(this.product.id); },
+        toggleCheckout(){ this.showProduct = !this.showProduct; },
+        placeOrder(){
+          if (!this.formValid) return;
+          alert(`Order placed for ${this.order.name} — ${this.cartItemCount} item(s).`);
+          this.cart = [];
+          this.order = { name: '', phone: '' };
+          this.showProduct = true;
+        }
+      }
+    });
+  </script>
+</body>
+</html>
